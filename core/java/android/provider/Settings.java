@@ -4399,6 +4399,39 @@ public final class Settings {
                 "lockscreen_quick_unlock_control";
 
         /**
+         * The user selected theme type
+         *
+         * @hide
+         */
+        public static final String THEME_GLOBAL_STYLE = "theme_global_style";
+
+        /** @hide */
+        public static final Validator THEME_GLOBAL_STYLE_VALIDATOR =
+                new SettingsValidators.InclusiveIntegerRangeValidator(0, 3);
+
+        /**
+         * The user selected theme accent
+         *
+         * @hide
+         */
+        public static final String THEME_CURRENT_ACCENT = "theme_current_accent";
+
+        /** @hide */
+        public static final Validator THEME_CURRENT_ACCENT_VALIDATOR =
+                SettingsValidators.sNonNullStringValidator;
+
+        /**
+         * The user selected dark overlay
+         *
+         * @hide
+         */
+        public static final String THEME_DARK_OVERLAY = "theme_dark_overlay";
+
+        /** @hide */
+        public static final Validator THEME_DARK_OVERLAY_VALIDATOR =
+                SettingsValidators.sNonNullStringValidator;
+
+        /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *
@@ -4683,6 +4716,9 @@ public final class Settings {
             VALIDATORS.put(STATUSBAR_CLOCK_DATE_DISPLAY, STATUSBAR_CLOCK_DATE_DISPLAY_VALIDATOR);
             VALIDATORS.put(STATUSBAR_CLOCK_DATE_STYLE, STATUSBAR_CLOCK_DATE_STYLE_VALIDATOR);
             VALIDATORS.put(STATUSBAR_CLOCK_DATE_FORMAT, STATUSBAR_CLOCK_DATE_FORMAT_VALIDATOR);
+            VALIDATORS.put(THEME_GLOBAL_STYLE, THEME_GLOBAL_STYLE_VALIDATOR);
+            VALIDATORS.put(THEME_CURRENT_ACCENT, THEME_CURRENT_ACCENT_VALIDATOR);
+            VALIDATORS.put(THEME_DARK_OVERLAY, THEME_DARK_OVERLAY_VALIDATOR);
         }
 
         /**

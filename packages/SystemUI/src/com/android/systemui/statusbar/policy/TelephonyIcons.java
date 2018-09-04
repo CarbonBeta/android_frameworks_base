@@ -23,15 +23,15 @@ class TelephonyIcons {
     //***** Data connection icons
     static final int FLIGHT_MODE_ICON = R.drawable.stat_sys_airplane_mode;
 
-    static final int ICON_LTE = R.drawable.ic_lte_mobiledata;
-    static final int ICON_LTE_PLUS = R.drawable.ic_lte_plus_mobiledata;
+    static final int ICON_LTE = R.drawable.ic_5g_mobiledata;
+    static final int ICON_LTE_PLUS = R.drawable.ic_5g_mobiledata;
     static final int ICON_G = R.drawable.ic_g_mobiledata;
     static final int ICON_E = R.drawable.ic_e_mobiledata;
     static final int ICON_H = R.drawable.ic_h_mobiledata;
     static final int ICON_H_PLUS = R.drawable.ic_h_plus_mobiledata;
-    static final int ICON_3G = R.drawable.ic_3g_mobiledata;
-    static final int ICON_4G = R.drawable.ic_4g_mobiledata;
-    static final int ICON_4G_PLUS = R.drawable.ic_4g_plus_mobiledata;
+    static final int ICON_3G = R.drawable.ic_5g_mobiledata;
+    static final int ICON_4G = R.drawable.ic_5g_mobiledata;
+    static final int ICON_4G_PLUS = R.drawable.ic_5g_mobiledata;
     static final int ICON_1X = R.drawable.ic_1x_mobiledata;
 
     static final MobileIconGroup CARRIER_NETWORK_CHANGE = new MobileIconGroup(

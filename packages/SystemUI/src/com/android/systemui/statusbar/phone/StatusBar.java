@@ -2133,15 +2133,32 @@ public class StatusBar extends SystemUI implements DemoMode,
     }
 
     public boolean isUsingDarkTheme() {
+        boolean usingDarkTheme = false;
+        final String darkTheme = "org.lineageos.overlay.dark";
+        final String blackTheme = "org.lineageos.overlay.black";
         OverlayInfo systemuiThemeInfo = null;
+
+        // Check if dark theme is enabled
         try {
-            String darkTheme = getDarkOverlay();
             systemuiThemeInfo = mOverlayManager.getOverlayInfo(darkTheme,
                     mLockscreenUserManager.getCurrentUserId());
         } catch (RemoteException e) {
             e.printStackTrace();
         }
-        return systemuiThemeInfo != null && systemuiThemeInfo.isEnabled();
+        usingDarkTheme = systemuiThemeInfo != null && systemuiThemeInfo.isEnabled();
+
+        // Check if black theme is enabled
+        try {
+            systemuiThemeInfo = mOverlayManager.getOverlayInfo(darkTheme,
+                    mLockscreenUserManager.getCurrentUserId());
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        usingDarkTheme = usingDarkTheme && systemuiThemeInfo != null
+                && systemuiThemeInfo.isEnabled();
+
+        return usingDarkTheme;
+
     }
 
     private String getDarkOverlay() {

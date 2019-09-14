@@ -151,6 +151,8 @@ import android.util.Log;
 import android.util.Slog;
 import android.util.proto.ProtoOutputStream;
 import android.view.Display;
+import com.android.internal.app.ActivityTrigger;
+
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -159,6 +161,7 @@ import com.android.internal.util.function.pooled.PooledLambda;
 import com.android.server.Watchdog;
 import com.android.server.am.ActivityManagerService;
 import com.android.server.am.ActivityManagerService.ItemMatcher;
+import android.util.BoostFramework;
 import com.android.server.am.AppTimeTracker;
 import com.android.server.am.EventLogTags;
 import com.android.server.am.PendingIntentRecord;
@@ -174,7 +177,7 @@ import java.util.Set;
 /**
  * State and management of a single stack of activities.
  */
-class ActivityStack extends ConfigurationContainer {
+public class ActivityStack extends ConfigurationContainer {
     private static final String TAG = TAG_WITH_CLASS_NAME ? "ActivityStack" : TAG_ATM;
     private static final String TAG_ADD_REMOVE = TAG + POSTFIX_ADD_REMOVE;
     private static final String TAG_APP = TAG + POSTFIX_APP;
@@ -317,6 +320,7 @@ class ActivityStack extends ConfigurationContainer {
     final ActivityTaskManagerService mService;
     final WindowManagerService mWindowManager;
 
+    public BoostFramework mPerf = null;
     /**
      * The back history of all previous (and possibly still
      * running) activities.  It contains #TaskRecord objects.
@@ -430,8 +434,12 @@ class ActivityStack extends ConfigurationContainer {
 
     final Handler mHandler;
 
-    private class ActivityStackHandler extends Handler {
+    static final ActivityTrigger mActivityTrigger = new ActivityTrigger();
 
+    private static final ActivityPluginDelegate mActivityPluginDelegate =
+        new ActivityPluginDelegate();
+
+    private class ActivityStackHandler extends Handler {
         ActivityStackHandler(Looper looper) {
             super(looper);
         }
@@ -1059,7 +1067,7 @@ class ActivityStack extends ConfigurationContainer {
         return super.setBounds(!inMultiWindowMode() ? null : bounds);
     }
 
-    ActivityRecord topRunningActivityLocked() {
+    public ActivityRecord topRunningActivityLocked() {
         return topRunningActivityLocked(false /* focusableOnly */);
     }
 
@@ -1679,6 +1687,15 @@ class ActivityStack extends ConfigurationContainer {
 
         if (DEBUG_STATES) Slog.v(TAG_STATES, "Moving to PAUSING: " + prev);
         else if (DEBUG_PAUSE) Slog.v(TAG_PAUSE, "Start pausing: " + prev);
+
+        if (mActivityTrigger != null) {
+            mActivityTrigger.activityPauseTrigger(prev.intent, prev.info, prev.appInfo);
+        }
+
+        if (mActivityPluginDelegate != null && getWindowingMode() != WINDOWING_MODE_UNDEFINED) {
+            mActivityPluginDelegate.activitySuspendNotification
+                (prev.appInfo.packageName, getWindowingMode() == WINDOWING_MODE_FULLSCREEN, true);
+        }
         mPausingActivity = prev;
         mLastPausedActivity = prev;
         mLastNoHistoryActivity = (prev.intent.getFlags() & Intent.FLAG_ACTIVITY_NO_HISTORY) != 0
@@ -2704,8 +2721,19 @@ class ActivityStack extends ConfigurationContainer {
         mStackSupervisor.mStoppingActivities.remove(next);
         mStackSupervisor.mGoingToSleepActivities.remove(next);
         next.sleeping = false;
+        next.launching = true;
 
         if (DEBUG_SWITCH) Slog.v(TAG_SWITCH, "Resuming " + next);
+
+        if (mActivityTrigger != null) {
+            mActivityTrigger.activityResumeTrigger(next.intent, next.info, next.appInfo,
+                    next.fullscreen);
+        }
+
+        if (mActivityPluginDelegate != null && getWindowingMode() != WINDOWING_MODE_UNDEFINED) {
+            mActivityPluginDelegate.activityInvokeNotification
+                (next.appInfo.packageName, getWindowingMode() == WINDOWING_MODE_FULLSCREEN);
+        }
 
         // If we are currently pausing an activity, then don't do anything until that is done.
         if (!mRootActivityContainer.allPausedActivitiesComplete()) {
@@ -2826,6 +2854,9 @@ class ActivityStack extends ConfigurationContainer {
         // to ignore it when computing the desired screen orientation.
         boolean anim = true;
         final DisplayContent dc = getDisplay().mDisplayContent;
+        if (mPerf == null) {
+            mPerf = new BoostFramework();
+        }
         if (prev != null) {
             if (prev.finishing) {
                 if (DEBUG_TRANSITION) Slog.v(TAG_TRANSITION,
@@ -2834,6 +2865,12 @@ class ActivityStack extends ConfigurationContainer {
                     anim = false;
                     dc.prepareAppTransition(TRANSIT_NONE, false);
                 } else {
+                    mWindowManager.prepareAppTransition(prev.getTaskRecord() == next.getTaskRecord()
+                            ? TRANSIT_ACTIVITY_CLOSE
+                            : TRANSIT_TASK_CLOSE, false);
+                    if(prev.getTaskRecord() != next.getTaskRecord() && mPerf != null) {
+                       mPerf.perfHint(BoostFramework.VENDOR_HINT_ANIM_BOOST, next.packageName);
+                    }
                     dc.prepareAppTransition(
                             prev.getTaskRecord() == next.getTaskRecord() ? TRANSIT_ACTIVITY_CLOSE
                                     : TRANSIT_TASK_CLOSE, false);
@@ -2846,6 +2883,14 @@ class ActivityStack extends ConfigurationContainer {
                     anim = false;
                     dc.prepareAppTransition(TRANSIT_NONE, false);
                 } else {
+                    mWindowManager.prepareAppTransition(prev.getTaskRecord() == next.getTaskRecord()
+                            ? TRANSIT_ACTIVITY_OPEN
+                            : next.mLaunchTaskBehind
+                                    ? TRANSIT_TASK_OPEN_BEHIND
+                                    : TRANSIT_TASK_OPEN, false);
+                    if(prev.getTaskRecord() != next.getTaskRecord() && mPerf != null) {
+                       mPerf.perfHint(BoostFramework.VENDOR_HINT_ANIM_BOOST, next.packageName);
+                    }
                     dc.prepareAppTransition(
                             prev.getTaskRecord() == next.getTaskRecord() ? TRANSIT_ACTIVITY_OPEN
                                     : next.mLaunchTaskBehind ? TRANSIT_TASK_OPEN_BEHIND
@@ -3197,6 +3242,11 @@ class ActivityStack extends ConfigurationContainer {
         }
 
         task.setFrontOfTask();
+
+        if (mActivityPluginDelegate != null) {
+            mActivityPluginDelegate.activityInvokeNotification
+                (r.appInfo.packageName, r.fullscreen);
+        }
 
         if (!isHomeOrRecentsStack() || numActivities() > 0) {
             final DisplayContent dc = getDisplay().mDisplayContent;
@@ -3738,6 +3788,7 @@ class ActivityStack extends ConfigurationContainer {
 
     final void stopActivityLocked(ActivityRecord r) {
         if (DEBUG_SWITCH) Slog.d(TAG_SWITCH, "Stopping: " + r);
+        r.launching = false;
         if ((r.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_HISTORY) != 0
                 || (r.info.flags&ActivityInfo.FLAG_NO_HISTORY) != 0) {
             if (!r.finishing) {
@@ -3762,11 +3813,22 @@ class ActivityStack extends ConfigurationContainer {
             r.resumeKeyDispatchingLocked();
             try {
                 r.stopped = false;
+
                 if (DEBUG_STATES) Slog.v(TAG_STATES,
                         "Moving to STOPPING: " + r + " (stop requested)");
                 r.setState(STOPPING, "stopActivityLocked");
+
+                if (mActivityPluginDelegate != null && getWindowingMode() != WINDOWING_MODE_UNDEFINED) {
+                    mActivityPluginDelegate.activitySuspendNotification
+                        (r.appInfo.packageName, getWindowingMode() == WINDOWING_MODE_FULLSCREEN, false);
+                }
                 if (DEBUG_VISIBILITY) Slog.v(TAG_VISIBILITY,
                         "Stopping visible=" + r.visible + " for " + r);
+
+                if (mActivityTrigger != null) {
+                    mActivityTrigger.activityStopTrigger(r.intent, r.info, r.appInfo);
+                }
+
                 if (!r.visible) {
                     r.setVisible(false);
                 }
@@ -4105,6 +4167,10 @@ class ActivityStack extends ConfigurationContainer {
             }
             if (DEBUG_STATES) Slog.v(TAG_STATES,
                     "Moving to STOPPING: "+ r + " (finish requested)");
+            if (mActivityPluginDelegate != null && getWindowingMode() != WINDOWING_MODE_UNDEFINED) {
+                mActivityPluginDelegate.activitySuspendNotification
+                    (r.appInfo.packageName, getWindowingMode() == WINDOWING_MODE_FULLSCREEN, false);
+            }
             r.setState(STOPPING, "finishCurrentActivityLocked");
             if (oomAdj) {
                 mService.updateOomAdj();
@@ -4117,6 +4183,11 @@ class ActivityStack extends ConfigurationContainer {
         mStackSupervisor.mGoingToSleepActivities.remove(r);
         final ActivityState prevState = r.getState();
         if (DEBUG_STATES) Slog.v(TAG_STATES, "Moving to FINISHING: " + r);
+
+        if (mActivityPluginDelegate != null && getWindowingMode() != WINDOWING_MODE_UNDEFINED) {
+            mActivityPluginDelegate.activitySuspendNotification
+                (r.appInfo.packageName, getWindowingMode() == WINDOWING_MODE_FULLSCREEN, false);
+        }
 
         r.setState(FINISHING, "finishCurrentActivityLocked");
 

@@ -29,6 +29,8 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemProperties;
+import android.util.DisplayMetrics;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.UserHandle;
@@ -56,60 +58,60 @@ import java.util.UUID;
  * &lt;application&gt; tag.
  */
 public class ApplicationInfo extends PackageItemInfo implements Parcelable {
-    
+
     /**
-     * Default task affinity of all activities in this application. See 
-     * {@link ActivityInfo#taskAffinity} for more information.  This comes 
-     * from the "taskAffinity" attribute. 
+     * Default task affinity of all activities in this application. See
+     * {@link ActivityInfo#taskAffinity} for more information.  This comes
+     * from the "taskAffinity" attribute.
      */
     public String taskAffinity;
-    
+
     /**
      * Optional name of a permission required to be able to access this
      * application's components.  From the "permission" attribute.
      */
     public String permission;
-    
+
     /**
      * The name of the process this application should run in.  From the
      * "process" attribute or, if not set, the same as
      * <var>packageName</var>.
      */
     public String processName;
-    
+
     /**
      * Class implementing the Application object.  From the "class"
      * attribute.
      */
     public String className;
-    
+
     /**
      * A style resource identifier (in the package's resources) of the
      * description of an application.  From the "description" attribute
      * or, if not set, 0.
      */
-    public int descriptionRes;    
-    
+    public int descriptionRes;
+
     /**
      * A style resource identifier (in the package's resources) of the
      * default visual theme of the application.  From the "theme" attribute
      * or, if not set, 0.
      */
     public int theme;
-    
+
     /**
      * Class implementing the Application's manage space
      * functionality.  From the "manageSpaceActivity"
      * attribute. This is an optional attribute and will be null if
      * applications don't specify it in their manifest
      */
-    public String manageSpaceActivityName;    
-    
+    public String manageSpaceActivityName;
+
     /**
      * Class implementing the Application's backup functionality.  From
      * the "backupAgent" attribute.  This is an optional attribute and
      * will be null if the application does not specify it in its manifest.
-     * 
+     *
      * <p>If android:allowBackup is set to false, this attribute is ignored.
      */
     public String backupAgentName;
@@ -144,7 +146,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * device's system image.
      */
     public static final int FLAG_SYSTEM = 1<<0;
-    
+
     /**
      * Value for {@link #flags}: set to true if this application would like to
      * allow debugging of its
@@ -153,7 +155,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:debuggable} of the &lt;application&gt; tag.
      */
     public static final int FLAG_DEBUGGABLE = 1<<1;
-    
+
     /**
      * Value for {@link #flags}: set to true if this application has code
      * associated with it.  Comes
@@ -161,7 +163,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:hasCode} of the &lt;application&gt; tag.
      */
     public static final int FLAG_HAS_CODE = 1<<2;
-    
+
     /**
      * Value for {@link #flags}: set to true if this application is persistent.
      * Comes from {@link android.R.styleable#AndroidManifestApplication_persistent
@@ -182,20 +184,20 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:allowTaskReparenting} of the &lt;application&gt; tag.
      */
     public static final int FLAG_ALLOW_TASK_REPARENTING = 1<<5;
-    
+
     /**
      * Value for {@link #flags}: default value for the corresponding ActivityInfo flag.
      * Comes from {@link android.R.styleable#AndroidManifestApplication_allowClearUserData
      * android:allowClearUserData} of the &lt;application&gt; tag.
      */
     public static final int FLAG_ALLOW_CLEAR_USER_DATA = 1<<6;
-    
+
     /**
      * Value for {@link #flags}: this is set if this application has been
      * installed as an update to a built-in system application.
      */
     public static final int FLAG_UPDATED_SYSTEM_APP = 1<<7;
-    
+
     /**
      * Value for {@link #flags}: this is set if the application has specified
      * {@link android.R.styleable#AndroidManifestApplication_testOnly
@@ -210,15 +212,15 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:smallScreens}.
      */
     public static final int FLAG_SUPPORTS_SMALL_SCREENS = 1<<9;
-    
+
     /**
      * Value for {@link #flags}: true when the application's window can be
      * displayed on normal screens.  Corresponds to
      * {@link android.R.styleable#AndroidManifestSupportsScreens_normalScreens
      * android:normalScreens}.
      */
-    public static final int FLAG_SUPPORTS_NORMAL_SCREENS = 1<<10; 
-    
+    public static final int FLAG_SUPPORTS_NORMAL_SCREENS = 1<<10;
+
     /**
      * Value for {@link #flags}: true when the application's window can be
      * increased in size for larger screens.  Corresponds to
@@ -226,7 +228,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:largeScreens}.
      */
     public static final int FLAG_SUPPORTS_LARGE_SCREENS = 1<<11;
-    
+
     /**
      * Value for {@link #flags}: true when the application knows how to adjust
      * its UI for different screen sizes.  Corresponds to
@@ -234,7 +236,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:resizeable}.
      */
     public static final int FLAG_RESIZEABLE_FOR_SCREENS = 1<<12;
-    
+
     /**
      * Value for {@link #flags}: true when the application knows how to
      * accommodate different screen densities.  Corresponds to
@@ -242,7 +244,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:anyDensity}.
      */
     public static final int FLAG_SUPPORTS_SCREEN_DENSITIES = 1<<13;
-    
+
     /**
      * Value for {@link #flags}: set to true if this application would like to
      * request the VM to operate under the safe mode. Comes from
@@ -254,7 +256,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
     /**
      * Value for {@link #flags}: set to <code>false</code> if the application does not wish
      * to permit any OS-driven backups of its data; <code>true</code> otherwise.
-     * 
+     *
      * <p>Comes from the
      * {@link android.R.styleable#AndroidManifestApplication_allowBackup android:allowBackup}
      * attribute of the &lt;application&gt; tag.
@@ -317,7 +319,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * android:xlargeScreens}.
      */
     public static final int FLAG_SUPPORTS_XLARGE_SCREENS = 1<<19;
-    
+
     /**
      * Value for {@link #flags}: true when the application has requested a
      * large heap for its processes.  Corresponds to
@@ -742,6 +744,19 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
     public static final String METADATA_PRELOADED_FONTS = "preloaded_fonts";
 
     /**
+     * Boolean indicating whether the resolution of the SurfaceView associated
+     * with this appplication can be overriden.
+     * {@hide}
+     */
+    public int overrideRes = 0;
+
+    /**
+     * In case, app needs different density than device density, set this value.
+     * {@hide}
+     */
+    public int overrideDensity = 0;
+
+    /**
      * The required smallest screen width the application can run on.  If 0,
      * nothing has been specified.  Comes from
      * {@link android.R.styleable#AndroidManifestSupportsScreens_requiresSmallestWidthDp
@@ -1003,7 +1018,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * the same uid).
      */
     public int uid;
-    
+
     /**
      * The minimum SDK version this application can run on. It will not run
      * on earlier versions.
@@ -1524,7 +1539,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
             if (sb == null) {
                 sb = ab.packageName;
             }
-            
+
             return sCollator.compare(sa.toString(), sb.toString());
         }
 
@@ -1536,7 +1551,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
 
     public ApplicationInfo() {
     }
-    
+
     public ApplicationInfo(ApplicationInfo orig) {
         super(orig);
         taskAffinity = orig.taskAffinity;
@@ -1546,6 +1561,8 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         theme = orig.theme;
         flags = orig.flags;
         privateFlags = orig.privateFlags;
+        overrideRes = orig.overrideRes;
+        overrideDensity = orig.overrideDensity;
         requiresSmallestWidthDp = orig.requiresSmallestWidthDp;
         compatibleWidthLimitDp = orig.compatibleWidthLimitDp;
         largestWidthLimitDp = orig.largestWidthLimitDp;
@@ -1620,6 +1637,8 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         dest.writeInt(theme);
         dest.writeInt(flags);
         dest.writeInt(privateFlags);
+        dest.writeInt(overrideRes);
+        dest.writeInt(overrideDensity);
         dest.writeInt(requiresSmallestWidthDp);
         dest.writeInt(compatibleWidthLimitDp);
         dest.writeInt(largestWidthLimitDp);
@@ -1699,6 +1718,8 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         theme = source.readInt();
         flags = source.readInt();
         privateFlags = source.readInt();
+        overrideRes = source.readInt();
+        overrideDensity = source.readInt();
         requiresSmallestWidthDp = source.readInt();
         compatibleWidthLimitDp = source.readInt();
         largestWidthLimitDp = source.readInt();
@@ -1778,7 +1799,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
 
     /**
      * Disable compatibility mode
-     * 
+     *
      * @hide
      */
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P, trackingBug = 115609023)
@@ -1936,7 +1957,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         }
         return pm.getDefaultActivityIcon();
     }
-    
+
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P, trackingBug = 115609023)
     private boolean isPackageUnavailable(PackageManager pm) {
         try {
@@ -2116,12 +2137,18 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         return output.toArray(new String[output.size()]);
     }
 
+    /** @hide */
+    public int getOverrideDensity() {
+        return overrideDensity;
+    }
+
     /** {@hide} */ public void setCodePath(String codePath) { scanSourceDir = codePath; }
     /** {@hide} */ public void setBaseCodePath(String baseCodePath) { sourceDir = baseCodePath; }
     /** {@hide} */ public void setSplitCodePaths(String[] splitCodePaths) { splitSourceDirs = splitCodePaths; }
     /** {@hide} */ public void setResourcePath(String resourcePath) { scanPublicSourceDir = resourcePath; }
     /** {@hide} */ public void setBaseResourcePath(String baseResourcePath) { publicSourceDir = baseResourcePath; }
     /** {@hide} */ public void setSplitResourcePaths(String[] splitResourcePaths) { splitPublicSourceDirs = splitResourcePaths; }
+    /** {@hide} */ public void setOverrideRes(int overrideResolution) { overrideRes = overrideResolution; }
 
     /** {@hide} */
     @UnsupportedAppUsage
@@ -2133,4 +2160,5 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
     @UnsupportedAppUsage
     public String getBaseResourcePath() { return publicSourceDir; }
     /** {@hide} */ public String[] getSplitResourcePaths() { return splitPublicSourceDirs; }
+    /** {@hide} */ public int canOverrideRes() { return overrideRes; }
 }

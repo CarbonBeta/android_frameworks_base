@@ -216,6 +216,7 @@ cc_library_shared {
         "fd_utils.cpp",
         "android_hardware_input_InputWindowHandle.cpp",
         "android_hardware_input_InputApplicationHandle.cpp",
+        "com_android_internal_app_ActivityTrigger.cpp",
     ],
 
     include_dirs: [

@@ -1561,7 +1561,7 @@ public class ActivityManagerService extends IActivityManager.Stub
 
     // Process in same process Group keep in same cgroup
     boolean mEnableProcessGroupCgroupFollow =
-            SystemProperties.getBoolean("ro.vendor.qti.cgroup_follow.enable",false);
+            SystemProperties.getBoolean("ro.vendor.qti.cgroup_follow.enable", true);
 
     /**
      * Flag whether the current user is a "monkey", i.e. whether

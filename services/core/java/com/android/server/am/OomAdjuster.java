@@ -169,9 +169,9 @@ public final class OomAdjuster {
     // Threshold for B-services when in memory pressure
     int mBServiceAppThreshold = 5;
     // Enable B-service aging propagation on memory pressure.
-    boolean mEnableBServicePropagation = false;
+    boolean mEnableBServicePropagation = true;
     // Process in same process Group keep in same cgroup
-    boolean mEnableProcessGroupCgroupFollow = false;
+    boolean mEnableProcessGroupCgroupFollow = true;
     boolean mProcessGroupCgroupFollowDex2oatOnly = false;
 
     public static BoostFramework mPerf = new BoostFramework();
@@ -188,8 +188,8 @@ public final class OomAdjuster {
         if(mPerf != null) {
             mMinBServiceAgingTime = Integer.valueOf(mPerf.perfGetProp("ro.vendor.qti.sys.fw.bservice_age", "5000"));
             mBServiceAppThreshold = Integer.valueOf(mPerf.perfGetProp("ro.vendor.qti.sys.fw.bservice_limit", "5"));
-            mEnableBServicePropagation = Boolean.parseBoolean(mPerf.perfGetProp("ro.vendor.qti.sys.fw.bservice_enable", "false"));
-            mEnableProcessGroupCgroupFollow = Boolean.parseBoolean(mPerf.perfGetProp("ro.vendor.qti.cgroup_follow.enable", "false"));
+            mEnableBServicePropagation = Boolean.parseBoolean(mPerf.perfGetProp("ro.vendor.qti.sys.fw.bservice_enable", "true"));
+            mEnableProcessGroupCgroupFollow = Boolean.parseBoolean(mPerf.perfGetProp("ro.vendor.qti.cgroup_follow.enable", "true"));
             mProcessGroupCgroupFollowDex2oatOnly = Boolean.parseBoolean(mPerf.perfGetProp("ro.vendor.qti.cgroup_follow.dex2oat_only", "false"));
         }
 
